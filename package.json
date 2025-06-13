@@ -9,10 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/vue": "^1.7.23",
+    "@vueuse/core": "^13.3.0",
+    "tailwindcss": "^4.1.10",
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@tailwindcss/postcss7-compat": "^2.2.17",
     "@vitejs/plugin-vue": "^5.2.3",
+    "autoprefixer": "^9.8.8",
+    "postcss": "^7.0.39",
     "vite": "^6.3.5"
   }
 }

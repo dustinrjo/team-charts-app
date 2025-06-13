@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -11,6 +15,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --full-time-color: #4CAF50;
+  --fixed-contractor-color: #2196F3;
+  --ad-hoc-color: #FF9800;
 }
 
 a {
@@ -63,6 +71,11 @@ button:focus-visible {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  min-width: 60vw;
+}
+
+.canvas-container {
+  min-height: 90vh;
 }
 
 @media (prefers-color-scheme: light) {

@@ -1,19 +1,36 @@
 <script setup>
-// Component logic will go here
+import { ref } from 'vue'
+import Palette from './components/Palette.vue'
+import Constructor from './components/Constructor.vue'
+import Canvas from './components/Canvas.vue'
+
+const paletteItems = ref([])
 </script>
 
 <template>
-  <div class="app">
-    <header>
-      <h1>Team Charts App</h1>
-      <p>Create and visualize organizational charts with ease</p>
-    </header>
-    <main>
-      <div class="welcome-card">
-        <h2>Welcome!</h2>
-        <p>This is where your organizational charts will come to life.</p>
+  <div class="min-h-screen bg-gray-100">
+    <div class="container mx-auto p-4 min-w-[60vw]">
+      <header class="mb-4">
+        <h1 class="text-2xl font-bold text-gray-800">Team Charts App</h1>
+      </header>
+
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Palette (Top) -->
+        <div class="col-span-12">
+          <Palette v-model:palette-items="paletteItems" />
+        </div>
+
+        <!-- Canvas (Center) -->
+        <div class="col-span-8 min-h-[90vh]">
+          <Canvas :palette-items="paletteItems" />
+        </div>
+
+        <!-- Constructor (Right) -->
+        <div class="col-span-4">
+          <Constructor :palette-items="paletteItems" />
+        </div>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
