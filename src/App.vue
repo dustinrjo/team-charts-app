@@ -9,7 +9,7 @@ const STORAGE_KEY = 'team-charts-data'
 const paletteItems = ref([])
 const quantities = ref({})
 
-// Load data from local storage on mount
+// Load data from localStorage on mount
 onMounted(() => {
   const savedData = localStorage.getItem(STORAGE_KEY)
   if (savedData) {
@@ -19,7 +19,7 @@ onMounted(() => {
   }
 })
 
-// Watch for changes and save to local storage
+// Save data to localStorage whenever it changes
 watch([paletteItems, quantities], ([newPaletteItems, newQuantities]) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     paletteItems: newPaletteItems,
