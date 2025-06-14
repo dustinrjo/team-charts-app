@@ -1,14 +1,50 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import Palette from './components/Palette.vue'
 import Constructor from './components/Constructor.vue'
 import Canvas from './components/Canvas.vue'
 
+const STORAGE_KEY = 'team-charts-data'
+
 const paletteItems = ref([])
+const quantities = ref({})
+
+// Load data from local storage on mount
+onMounted(() => {
+  const savedData = localStorage.getItem(STORAGE_KEY)
+  if (savedData) {
+    const { paletteItems: savedPaletteItems, quantities: savedQuantities } = JSON.parse(savedData)
+    paletteItems.value = savedPaletteItems
+    quantities.value = savedQuantities
+  }
+})
+
+// Watch for changes and save to local storage
+watch([paletteItems, quantities], ([newPaletteItems, newQuantities]) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    paletteItems: newPaletteItems,
+    quantities: newQuantities
+  }))
+}, { deep: true })
+
+const clearAllData = () => {
+  if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+    paletteItems.value = []
+    quantities.value = {}
+    localStorage.removeItem(STORAGE_KEY)
+  }
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-100">
+    <button
+      @click="clearAllData"
+      class="fixed top-4 right-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+    >
+      Clear All Data
+    </button>
+
     <div class="container mx-auto p-4 min-w-[60vw]">
       <header class="mb-4">
         <h1 class="text-2xl font-bold text-gray-800">Team Charts App</h1>
@@ -27,7 +63,10 @@ const paletteItems = ref([])
 
         <!-- Constructor (Right) -->
         <div class="col-span-4">
-          <Constructor :palette-items="paletteItems" />
+          <Constructor 
+            :palette-items="paletteItems"
+            v-model:quantities="quantities"
+          />
         </div>
       </div>
     </div>

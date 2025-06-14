@@ -5,25 +5,19 @@ const props = defineProps({
   paletteItems: {
     type: Array,
     required: true
+  },
+  quantities: {
+    type: Object,
+    required: true
   }
 })
 
-const quantities = ref({})
-
-watch(() => props.paletteItems, (newItems) => {
-  const newQuantities = { ...quantities.value }
-  newItems.forEach(item => {
-    if (!newQuantities[item.title]) {
-      newQuantities[item.title] = 0
-    }
-  })
-  quantities.value = newQuantities
-}, { deep: true })
+const emit = defineEmits(['update:quantities'])
 
 const updateQuantity = (title, delta) => {
-  const newQuantities = { ...quantities.value }
+  const newQuantities = { ...props.quantities }
   newQuantities[title] = Math.max(0, (newQuantities[title] || 0) + delta)
-  quantities.value = newQuantities
+  emit('update:quantities', newQuantities)
 }
 </script>
 
