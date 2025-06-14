@@ -13,19 +13,26 @@ const quantities = ref({})
 onMounted(() => {
   const savedData = localStorage.getItem(STORAGE_KEY)
   if (savedData) {
-    const { paletteItems: savedPaletteItems, quantities: savedQuantities } = JSON.parse(savedData)
-    paletteItems.value = savedPaletteItems
+    const { items, quantities: savedQuantities } = JSON.parse(savedData)
+    paletteItems.value = items
     quantities.value = savedQuantities
   }
 })
 
 // Save data to localStorage whenever it changes
-watch([paletteItems, quantities], ([newPaletteItems, newQuantities]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    paletteItems: newPaletteItems,
-    quantities: newQuantities
-  }))
-}, { deep: true })
+watch(
+  [paletteItems, quantities],
+  ([newItems, newQuantities]) => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        items: newItems,
+        quantities: newQuantities
+      })
+    )
+  },
+  { deep: true }
+)
 
 const clearAllData = () => {
   if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
@@ -37,39 +44,35 @@ const clearAllData = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <button
-      @click="clearAllData"
-      class="fixed top-4 right-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-    >
-      Clear All Data
-    </button>
-
-    <div class="container mx-auto p-4 min-w-[60vw]">
-      <header class="mb-4">
-        <h1 class="text-2xl font-bold text-gray-800">Team Charts App</h1>
-      </header>
-
-      <div class="grid grid-cols-12 gap-4">
-        <!-- Palette (Top) -->
-        <div class="col-span-12">
-          <Palette v-model:palette-items="paletteItems" />
+  <div class="h-screen bg-gray-100 p-4 flex flex-col">
+    <div class="flex-1 max-w-7xl mx-auto w-full">
+      <!-- Top row with Palette and Constructor -->
+      <div class="grid grid-cols-12 gap-4 mb-4">
+        <div class="col-span-8 h-full">
+          <Palette v-model:paletteItems="paletteItems" />
         </div>
-
-        <!-- Canvas (Center) -->
-        <div class="col-span-8 min-h-[90vh]">
-          <Canvas :palette-items="paletteItems" />
-        </div>
-
-        <!-- Constructor (Right) -->
-        <div class="col-span-4">
-          <Constructor 
+        <div class="col-span-4 h-full">
+          <Constructor
             :palette-items="paletteItems"
             v-model:quantities="quantities"
           />
         </div>
       </div>
+      
+      <!-- Bottom row with Canvas -->
+      <div class="w-full h-full">
+        <Canvas
+          :palette-items="paletteItems"
+          :quantities="quantities"
+        />
+      </div>
     </div>
+    <button
+      @click="clearAllData"
+      class="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+    >
+      Clear All Data
+    </button>
   </div>
 </template>
 
