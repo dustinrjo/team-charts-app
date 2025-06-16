@@ -16,19 +16,21 @@ const isModalOpen = ref(false)
 const hasAttemptedSave = ref(false)
 const isEditing = ref(false)
 const editingIndex = ref(-1)
-const newItem = ref({
+
+const formData = ref({
   id: '',
   title: '',
   type: 'Full Time',
   function: 'engineering',
-  reportsTo: null
+  reportsTo: null,
+  vendor: ''
 })
 
 const types = ['Full Time', 'Fixed Contractor', 'Ad Hoc']
 const functions = ['product', 'design', 'engineering', 'QA', 'program management']
 
 const isFormValid = computed(() => {
-  return newItem.value.title.trim() !== ''
+  return formData.value.title.trim() !== ''
 })
 
 const showTitleError = computed(() => {
@@ -50,62 +52,106 @@ const availableReportOptions = computed(() => {
   })
 })
 
-const openModal = () => {
+const schema = computed(() => {
+  const currentItem = isEditing.value ? props.paletteItems[editingIndex.value] : null
+  
+  return {
+    title: { 
+      type: 'text', 
+      label: '', 
+      rules: 'required', 
+      placeholder: 'Enter title',
+      default: currentItem?.title || ''
+    },
+    type: { 
+      type: 'select', 
+      label: '', 
+      items: types, 
+      rules: 'required', 
+      placeholder: 'Select type',
+      default: currentItem?.type || 'Full Time'
+    },
+    function: { 
+      type: 'select', 
+      label: '', 
+      items: functions, 
+      rules: 'required', 
+      placeholder: 'Select function',
+      default: currentItem?.function || 'engineering'
+    },
+    reportsTo: {
+      type: 'select',
+      label: '',
+      items: props.paletteItems.filter((item, idx) => !isEditing.value || idx !== editingIndex.value).map(item => ({ value: item.id, label: item.title })),
+      placeholder: 'Select reporting entity',
+      clearable: true,
+      default: currentItem?.reportsTo || null
+    },
+    vendor: {
+      type: 'select',
+      label: '',
+      items: vendorOptions.value,
+      optionCreate: true,
+      search: true,
+      clearable: true,
+      placeholder: 'Select or create vendor',
+      default: currentItem?.vendor || ''
+    },
+    cancel: {
+      type: 'button',
+      buttonLabel: 'Cancel',
+      secondary: true,
+      onClick: () => closeModal()
+    },
+    submit: {
+      type: 'button',
+      buttonLabel: isEditing.value ? 'Save Changes' : 'Save',
+      submits: true
+    }
+  }
+})
+
+function openModal() {
   isModalOpen.value = true
-  hasAttemptedSave.value = false
   isEditing.value = false
   editingIndex.value = -1
-  newItem.value = {
-    id: generateId(),
-    title: '',
-    type: 'Full Time',
-    function: 'engineering',
-    reportsTo: null
-  }
 }
 
-const editItem = (index) => {
+function editItem(index) {
   isModalOpen.value = true
-  hasAttemptedSave.value = false
   isEditing.value = true
   editingIndex.value = index
-  newItem.value = { ...props.paletteItems[index] }
 }
 
-const closeModal = () => {
+function closeModal() {
   isModalOpen.value = false
-  hasAttemptedSave.value = false
   isEditing.value = false
   editingIndex.value = -1
-  newItem.value = {
-    id: generateId(),
-    title: '',
-    type: 'Full Time',
-    function: 'engineering',
-    reportsTo: null
-  }
 }
 
-const saveItem = () => {
-  hasAttemptedSave.value = true
-  
-  if (!newItem.value.title.trim()) {
-    return
+function saveItem(form$) {
+  const data = form$.data
+  const cleanData = {
+    id: isEditing.value ? props.paletteItems[editingIndex.value].id : generateId(),
+    title: data.title,
+    type: data.type,
+    function: data.function,
+    reportsTo: data.reportsTo,
+    vendor: data.vendor
   }
   
   const updatedItems = Array.from(props.paletteItems)
   if (isEditing.value) {
-    // Preserve the original ID when editing
-    const originalId = updatedItems[editingIndex.value].id
-    updatedItems[editingIndex.value] = { ...newItem.value, id: originalId }
+    updatedItems[editingIndex.value] = cleanData
   } else {
-    updatedItems.push({ ...newItem.value })
+    updatedItems.push(cleanData)
   }
+  
   emit('update:paletteItems', updatedItems)
   closeModal()
 }
 
-const deleteItem = (index) => {
+function deleteItem(index) {
   const updatedItems = Array.from(props.paletteItems).filter((_, i) => i !== index)
   emit('update:paletteItems', updatedItems)
 }
@@ -136,6 +182,16 @@ const thirdLevelItems = computed(() => {
     const reportsTo = props.paletteItems.find(i => i.id === item.reportsTo)
     return reportsTo && reportsTo.reportsTo
   })
+})
+
+// Compute unique vendor options from palette
+const vendorOptions = computed(() => {
+  const vendors = props.paletteItems
+    .map(item => item.vendor)
+    .filter(v => v && v.trim() !== '')
+  return Array.from(new Set(vendors))
+    .sort()
+    .map(v => ({ value: v, label: v }))
 })
 </script>
 
@@ -174,9 +230,9 @@ const thirdLevelItems = computed(() => {
             >
               ×
             </button>
-            <h3 class="font-medium">{{ item.title }}</h3>
-            <p class="text-sm text-gray-600">{{ item.type }}</p>
-            <p class="text-sm text-gray-600">{{ item.function }}</p>
+            <h3 class="text-xs font-medium">{{ item.title }}</h3>
+            <p class="text-xs text-gray-600">{{ item.type }}</p>
+            <p class="text-xs text-gray-600">{{ item.function }}</p>
           </div>
         </div>
       </div>
@@ -204,10 +260,10 @@ const thirdLevelItems = computed(() => {
             >
               ×
             </button>
-            <h3 class="font-medium">{{ item.title }}</h3>
-            <p class="text-sm text-gray-600">{{ item.type }}</p>
-            <p class="text-sm text-gray-600">{{ item.function }}</p>
-            <p class="text-sm text-gray-500 mt-2">
+            <h3 class="text-xs font-medium">{{ item.title }}</h3>
+            <p class="text-xs text-gray-600">{{ item.type }}</p>
+            <p class="text-xs text-gray-600">{{ item.function }}</p>
+            <p class="text-xs text-gray-500 mt-2">
               Reports to: {{ getReportingEntityTitle(item.reportsTo) }}
             </p>
           </div>
@@ -237,10 +293,10 @@ const thirdLevelItems = computed(() => {
             >
               ×
             </button>
-            <h3 class="font-medium">{{ item.title }}</h3>
-            <p class="text-sm text-gray-600">{{ item.type }}</p>
-            <p class="text-sm text-gray-600">{{ item.function }}</p>
-            <p class="text-sm text-gray-500 mt-2">
+            <h3 class="text-xs font-medium">{{ item.title }}</h3>
+            <p class="text-xs text-gray-600">{{ item.type }}</p>
+            <p class="text-xs text-gray-600">{{ item.function }}</p>
+            <p class="text-xs text-gray-500 mt-2">
               Reports to: {{ getReportingEntityTitle(item.reportsTo) }}
             </p>
           </div>
@@ -256,79 +312,16 @@ const thirdLevelItems = computed(() => {
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       
       <div class="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel class="bg-white rounded-lg p-6 max-w-sm w-full border border-gray-200 shadow-lg">
+        <DialogPanel class="bg-white rounded-lg p-6 max-w-md w-full border border-gray-200 shadow-lg">
           <DialogTitle class="text-lg font-medium mb-4">
             {{ isEditing ? 'Edit Item' : 'Add New Item' }}
           </DialogTitle>
           
-          <form @submit.prevent="saveItem" class="space-y-6">
-            <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Title</label>
-              <input
-                v-model="newItem.title"
-                type="text"
-                class="mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                :class="[
-                  showTitleError ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-gray-50'
-                ]"
-              />
-              <div class="h-5">
-                <p v-if="showTitleError" class="text-sm text-red-600">
-                  Title is required
-                </p>
-              </div>
-            </div>
-
-            <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Type</label>
-              <select
-                v-model="newItem.type"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option v-for="type in types" :key="type" :value="type">
-                  {{ type }}
-                </option>
-              </select>
-            </div>
-
-            <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Function</label>
-              <select
-                v-model="newItem.function"
-                class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option v-for="func in functions" :key="func" :value="func">
-                  {{ func }}
-                </option>
-              </select>
-            </div>
-
-            <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700">Reports to</label>
-              <EntitySelect
-                v-model="newItem.reportsTo"
-                :options="availableReportOptions"
-                placeholder="Select reporting entity"
-              />
-            </div>
-
-            <div class="mt-6 flex justify-end space-x-3">
-              <button
-                type="button"
-                @click="closeModal"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
-                :class="{ 'opacity-50 cursor-not-allowed': !isFormValid }"
-              >
-                {{ isEditing ? 'Save Changes' : 'Save' }}
-              </button>
-            </div>
-          </form>
+          <Vueform
+            :schema="schema"
+            @submit="saveItem"
+            :endpoint="false"
+          />
         </DialogPanel>
       </div>
     </Dialog>
