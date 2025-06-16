@@ -47,17 +47,17 @@ const clearAllData = () => {
   <div class="h-screen bg-gray-100 p-4 flex flex-col">
     <div class="flex-1 max-w-7xl mx-auto w-full">
       <!-- Top row with Palette and Constructor -->
-      <div class="grid grid-cols-12 gap-4 mb-4">
-        <div class="col-span-8 h-full">
+
+        <div class="w-full">
           <Palette v-model:paletteItems="paletteItems" />
         </div>
-        <div class="col-span-4 h-full">
+        <div class="w-full">
           <Constructor
             :palette-items="paletteItems"
             v-model:quantities="quantities"
           />
-        </div>
-      </div>
+          </div>
+
       
       <!-- Bottom row with Canvas -->
       <div class="w-full h-full">

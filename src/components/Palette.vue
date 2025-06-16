@@ -91,9 +91,10 @@ const schema = computed(() => {
       type: 'select',
       label: '',
       items: vendorOptions.value,
-      optionCreate: true,
+      create: true,
       search: true,
       clearable: true,
+      appendNewOption: true,
       placeholder: 'Select or create vendor',
       default: currentItem?.vendor || ''
     },
@@ -131,13 +132,27 @@ function closeModal() {
 
 function saveItem(form$) {
   const data = form$.data
+  
+  // Handle vendor: if it's an object with value/label, extract the value
+  // If it's a string (new vendor), use it directly
+  let vendorValue = ''
+  if (data.vendor) {
+    if (typeof data.vendor === 'object' && data.vendor.value) {
+      vendorValue = data.vendor.value
+    } else if (typeof data.vendor === 'string') {
+      vendorValue = data.vendor
+    } else {
+      vendorValue = String(data.vendor)
+    }
+  }
+  
   const cleanData = {
     id: isEditing.value ? props.paletteItems[editingIndex.value].id : generateId(),
     title: data.title,
     type: data.type,
     function: data.function,
     reportsTo: data.reportsTo,
-    vendor: data.vendor
+    vendor: vendorValue
   }
   
   const updatedItems = Array.from(props.paletteItems)
@@ -191,7 +206,7 @@ const vendorOptions = computed(() => {
     .filter(v => v && v.trim() !== '')
   return Array.from(new Set(vendors))
     .sort()
-    .map(v => ({ value: v, label: v }))
+    .map(v => v) // VueForm expects simple strings for optionCreate fields
 })
 </script>
 
@@ -210,8 +225,8 @@ const vendorOptions = computed(() => {
     <div class="space-y-6">
       <!-- Top Level Row -->
       <div class="space-y-4">
-        <h3 class="text-sm font-medium text-gray-500">Top Level</h3>
-        <div class="grid grid-cols-6 gap-4">
+        <h3 class="text-sm font-medium text-gray-500 level-heading">Top Level</h3>
+        <div class="grid grid-cols-6 gap-4 palette-grid">
           <div
             v-for="(item, index) in topLevelItems"
             :key="item.id"
@@ -239,9 +254,9 @@ const vendorOptions = computed(() => {
 
       <!-- Second Level Row -->
       <div class="space-y-4">
-        <div class="border-t border-dotted border-gray-300 pt-6"></div>
-        <h3 class="text-sm font-medium text-gray-500">Second Level</h3>
-        <div class="grid grid-cols-6 gap-4">
+        <div class="border-t border-dotted border-gray-300 pt-2"></div>
+        <h3 class="text-sm font-medium text-gray-500 level-heading">Second Level</h3>
+        <div class="grid grid-cols-6 gap-4 palette-grid">
           <div
             v-for="(item, index) in secondLevelItems"
             :key="item.id"
@@ -272,9 +287,9 @@ const vendorOptions = computed(() => {
 
       <!-- Third Level Row -->
       <div v-if="thirdLevelItems.length > 0" class="space-y-4">
-        <div class="border-t border-dotted border-gray-300 pt-6"></div>
-        <h3 class="text-sm font-medium text-gray-500">Third Level</h3>
-        <div class="grid grid-cols-6 gap-4">
+        <div class="border-t border-dotted border-gray-300 pt-2"></div>
+        <h3 class="text-sm font-medium text-gray-500 level-heading">Third Level</h3>
+        <div class="grid grid-cols-6 gap-4 palette-grid">
           <div
             v-for="(item, index) in thirdLevelItems"
             :key="item.id"
@@ -326,4 +341,15 @@ const vendorOptions = computed(() => {
       </div>
     </Dialog>
   </div>
-</template> 
+</template>
+
+<style scoped>
+h3.level-heading {
+  margin-top: 0 !important;
+  text-align: left;
+}
+
+.palette-grid {
+  min-height: 150px;
+}
+</style> 
